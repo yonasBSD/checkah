@@ -58,7 +58,7 @@ func NewCheckPort(options map[string]string) (*Port, error) {
 	}
 
 	c := Port{
-		command: fmt.Sprintf("ss -tulpn | grep ':%s'", port),
+		command: fmt.Sprintf("sudo sockstat -4 -l -p %s | wc -l | tr -d \" \t\n\r\" | grep '2'", port),
 		port:    port,
 		options: options,
 	}

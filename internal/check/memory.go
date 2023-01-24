@@ -96,24 +96,18 @@ func memoryFromFree(stdout string) (int, error) {
 
 // Run executes the check
 func (c *Memory) Run(t transport.Transport) *Result {
-	cmd := "free -t"
-	checker := memoryFromFree
-	if !cmdExist("free", t) {
-		cmd = "memory_pressure"
-		checker = memoryFromMemoryPressure
-	}
-
+	cmd := "freecolor -m -o | grep Mem | awk '{print $2, $3}'"
 	stdout, _, err := t.Execute(cmd)
 	if err != nil {
 		return c.returnCheck("", err)
 	}
 
-	val, err := checker(stdout)
-	if err != nil {
-		return c.returnCheck("", err)
-	}
+	results := strings.Split(stdout, " ")
+	total,_ := strconv.ParseInt(strings.TrimSpace(results[0]), 10, 64)
+	used,_  := strconv.ParseInt(strings.TrimSpace(results[1]), 10, 64)
 
-	if val > c.limitUseMem {
+	val := used * 100 / total
+	if val > int64(c.limitUseMem) {
 		return c.returnCheck("", fmt.Errorf("memory used is above %d%%: %d%%", c.limitUseMem, val))
 	}
 

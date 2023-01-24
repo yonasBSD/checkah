@@ -1,0 +1,38 @@
+profiles:
+- name: simple
+  checks:
+  - type: disk
+    options:
+      limit: "80"
+      mount: /
+  - type: loadavg
+    options:
+      load_15min: "1"
+  - type: uptime
+    options:
+      days: "180"
+  - type: memory
+    options:
+      limit_mem: "90"
+- name: networking
+  checks:
+  - type: process
+    options:
+      pattern: sshd
+  - type: tcp
+    options:
+      port: "22"
+- alerts:
+  - type: file
+    options:
+      path: /tmp/alerts.txt
+  - type: command
+    options:
+      command: "notify-send -u critical"
+
+hosts:
+- name: server1.lan
+  host: localhost
+  profiles:
+  - simple
+  - networking

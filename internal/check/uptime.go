@@ -4,6 +4,7 @@ package check
 
 import (
 	"fmt"
+	"time"
 	"strconv"
 	"strings"
 
@@ -73,25 +74,19 @@ func uptimeFromLoadavg(stdout string) (int, error) {
 
 // Run executes the check
 func (c *Uptime) Run(t transport.Transport) *Result {
-	cmd := "cat /proc/uptime"
-	checker := uptimeFromProc
-	if !hasProc(t) {
-		cmd = "uptime"
-		checker = uptimeFromLoadavg
-	}
-
+	cmd := "sysctl kern.boottime | awk '{print $5}' | cut -d',' -f1"
 	stdout, _, err := t.Execute(cmd)
+
 	if err != nil {
 		return c.returnCheck("", err)
 	}
 
-	stdout = strings.TrimSpace(stdout)
-	val, err := checker(stdout)
-	if err != nil {
-		return c.returnCheck("", err)
-	}
+	boot_time_s  := strings.TrimSpace(string(stdout[:]))
+	boot_time, _ := strconv.ParseInt(boot_time_s, 10, 64)
+	cur_time := time.Now().Unix()
+	val := (cur_time - boot_time) / 60 / 60 / 24
 
-	if val > c.limitDays {
+	if val > int64(c.limitDays) {
 		return c.returnCheck("", fmt.Errorf("uptime above %d days: %d days", c.limitDays, val))
 	}
 
