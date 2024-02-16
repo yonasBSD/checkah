@@ -1,5 +1,4 @@
 bin/
-go.sum
 !configs/example.json
 !configs/example.yaml
 !configs/localhost.yaml
